@@ -1,40 +1,104 @@
 from tkinter import *
 from PIL import Image, ImageTk, ImageDraw
 
+scale_512 = 0
+scale_255 = 0
+contrast_q1 = 0
+contrast_q2 = 255
 
-def on_scale_intensivity(val):
-    global gray_pil_img, img_label
-    change_intensivity(gray_pil_img, img_label, (int)(val))
 
-# def onScaleG(val):
+def on_scale_512(val):
+    global scale_512
+    scale_512 = (int)(val)
 
-# def onScaleB(val):
 
-# def click():
+def on_scale_255(val):
+    global scale_255
+    scale_255 = (int)(val)
+
+
+def on_scale_q1(val):
+    global contrast_q1
+    contrast_q1 = (int)(val)
+
+
+def on_scale_q2(val):
+    global contrast_q2
+    contrast_q2 = (int)(val)
+
+
+def reset_click():
+    global gray_pil_img, original_pil_img, img_label, gist_label
+
+
+    gray_pil_img = gray_scale(original_pil_img)
+    gray_img = ImageTk.PhotoImage(gray_pil_img)
+    img_label.configure(image=gray_img)
+    img_label.image = gray_img
+
+    gist(gray_pil_img, gist_label)
+
+
+def intensivity_click():
+    global gray_pil_img, img_label, gist_label, scale_512
+
+    change_intensivity(gray_pil_img, img_label, scale_512)
+    gist(gray_pil_img, gist_label)
+
+
+def negative_click():
+    global gray_pil_img, img_label, gist_label, scale_255
+
+    negative(gray_pil_img, img_label, scale_255)
+    gist(gray_pil_img, gist_label)
+
+
+def binarization_click():
+    global gray_pil_img, img_label, gist_label, scale_255
+
+    binarization(gray_pil_img, img_label, scale_255)
+    gist(gray_pil_img, gist_label)
+
+
+def conrast_up_click():
+    global gray_pil_img, img_label, gist_label, contrast_q1, contrast_q2
+
+    contrast_up(gray_pil_img, img_label, contrast_q1, contrast_q2)
+    gist(gray_pil_img, gist_label)
+
+
+def conrast_down_click():
+    global gray_pil_img, img_label, gist_label, contrast_q1, contrast_q2
+
+    contrast_down(gray_pil_img, img_label, contrast_q1, contrast_q2)
+    gist(gray_pil_img, gist_label)
 
 
 def gray_scale(pil_img):
+    copy_pil_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
             pix = pil_img.getpixel((i, j))
             intensity = pix[0] * 0.3 + pix[1] * 0.59 + pix[2] * 0.11
-            pil_img.putpixel((i, j), (int(intensity), int(intensity), int(intensity)))
+            copy_pil_img.putpixel((i, j), (int(intensity), int(intensity), int(intensity)))
 
-    return pil_img
+    return copy_pil_img
 
 
-def gist(gray_pil_img):
+def gist(gray_pil_img, label):
     arr = [0] * 256
     for i in range(gray_pil_img.size[0]):
         for j in range(gray_pil_img.size[1]):
             arr[gray_pil_img.getpixel((i, j))[0]] += 1
 
-    gist_img = Image.new('RGB', (512, 400), 'white')
-    gist_draw = ImageDraw.Draw(gist_img)
+    gist_pil_img = Image.new('RGB', (512, 400), 'white')
+    gist_draw = ImageDraw.Draw(gist_pil_img)
     for k in range(256):
-        gist_draw.rectangle([k * 2, gist_img.size[1], (k * 2) + 1, gist_img.size[1] - (int)(arr[k] / 30)], fill='black')
-        print(arr[k] / 30)
-    return gist_img
+        gist_draw.rectangle([k * 2, gist_pil_img.size[1], (k * 2) + 1, gist_pil_img.size[1] - (int)(arr[k] / 30)],
+                            fill='black')
+    gist_img = ImageTk.PhotoImage(gist_pil_img)
+    label.configure(image=gist_img)
+    label.image = gist_img
 
 
 def change_intensivity(pil_img, label,val):
@@ -46,10 +110,56 @@ def change_intensivity(pil_img, label,val):
                 new_intensivity = 255
             elif (new_intensivity < - 255):
                 new_intensivity = -255
-            pil_img.putpixel((i, j), (new_intensivity,new_intensivity,new_intensivity))
+            pil_img.putpixel((i, j), (new_intensivity, new_intensivity, new_intensivity))
     img = ImageTk.PhotoImage(pil_img)
-    label.configure(image = img)
-    label.photo_ref(img)
+    label.configure(image=img)
+    label.image = img
+
+
+def negative(pil_img, label, val):
+    for i in range(pil_img.size[0]):
+        for j in range(pil_img.size[1]):
+            pix = pil_img.getpixel((i, j))
+            if (pix[0] >= val):
+                pil_img.putpixel((i, j), (255 - pix[0], 255 - pix[0], 255 - pix[0]))
+    img = ImageTk.PhotoImage(pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
+def binarization(pil_img, label, val):
+    for i in range(pil_img.size[0]):
+        for j in range(pil_img.size[1]):
+            pix = pil_img.getpixel((i, j))
+            if (pix[0] >= val):
+                pil_img.putpixel((i, j), (255, 255, 255))
+            else:
+                pil_img.putpixel((i, j), (0, 0, 0))
+    img = ImageTk.PhotoImage(pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
+def contrast_up(pil_img, label, q1, q2):
+    for i in range(pil_img.size[0]):
+        for j in range(pil_img.size[1]):
+            pix = pil_img.getpixel((i, j))
+            res_pix = ((pix[0] - q1)*(255//(q2 - q1)))
+            pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
+    img = ImageTk.PhotoImage(pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
+def contrast_down(pil_img, label, q1, q2):
+    for i in range(pil_img.size[0]):
+        for j in range(pil_img.size[1]):
+            pix = pil_img.getpixel((i, j))
+            res_pix = q1 + pix[0] * ((q2 - q1) // 255)
+            pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
+    img = ImageTk.PhotoImage(pil_img)
+    label.configure(image=img)
+    label.image = img
 
 
 window = Tk()
@@ -61,22 +171,36 @@ original_pil_img = Image.open('img.jpg')
 gray_pil_img = gray_scale(original_pil_img)
 gray_img = ImageTk.PhotoImage(gray_pil_img)
 
-gist_pil_img = gist(gray_pil_img)
-gist_img = ImageTk.PhotoImage(gist_pil_img)
-
 img_label = Label(window, image=gray_img)
 img_label.pack(side=LEFT)
-gist_label = Label(window, image=gist_img)
+
+gist_label = Label(window)
 gist_label.pack(side=LEFT)
 
-scale_intensivity = Scale(window,orient = 'horizontal', from_= -255, to=255, label = 'Intensivity' , command=on_scale_intensivity)
-scale_intensivity.pack()
-# scaleG = Scale(window,orient = 'horizontal', from_=0, to=100, command=onScaleG)
-# scaleG.pack()
-# scaleB = Scale(window,orient = 'horizontal', from_=0, to=100, command=onScaleB)
-# scaleB.pack()
+gist(gray_pil_img, gist_label)
 
-# btn = Button(text='click', command =click)
-# btn.pack()
+reset_button = Button(text='reset img', command=reset_click)
+reset_button.pack()
+
+scale_intensivity = Scale(window, orient='horizontal', from_=-255, to=255, command=on_scale_512)
+scale_intensivity.pack()
+intensivity_button = Button(text='intensivity', command=intensivity_click)
+intensivity_button.pack()
+
+scale_negative = Scale(window, orient='horizontal', from_=0, to=255, command=on_scale_255)
+scale_negative.pack()
+negative_button = Button(text='negative', command=negative_click)
+negative_button.pack()
+binarization_button = Button(text='binarization', command=binarization_click)
+binarization_button.pack()
+
+scale_q1 = Scale(window,orient = 'horizontal', label = 'q1', from_=0, to=255, command=on_scale_q1)
+scale_q1.pack()
+scale_q2 = Scale(window,orient = 'horizontal', label = 'q2', from_=0, to=255, command=on_scale_q2)
+scale_q2.pack()
+contrast_up_button = Button(text='contrast up', command=conrast_up_click)
+contrast_up_button.pack()
+contrast_down_button = Button(text='contrast down', command=conrast_down_click)
+contrast_down_button.pack()
 
 window.mainloop()
