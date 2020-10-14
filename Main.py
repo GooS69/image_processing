@@ -5,7 +5,8 @@ scale_512 = 0
 scale_255 = 0
 contrast_q1 = 0
 contrast_q2 = 255
-
+gamma = 1
+quantization = 1
 
 def on_scale_512(val):
     global scale_512
@@ -25,6 +26,16 @@ def on_scale_q1(val):
 def on_scale_q2(val):
     global contrast_q2
     contrast_q2 = (int)(val)
+
+
+def on_scale_gamma(val):
+    global gamma
+    gamma = (int)(val)
+
+
+def on_scale_quantization(val):
+    global quantization
+    quantization = (int)(val)
 
 
 def reset_click():
@@ -74,6 +85,27 @@ def conrast_down_click():
     gist(gray_pil_img, gist_label)
 
 
+def gamma1_click():
+    global gray_pil_img, img_label, gist_label, gamma
+
+    gamma_change(gray_pil_img, img_label, gamma)
+    gist(gray_pil_img, gist_label)
+
+
+def gamma2_click():
+    global gray_pil_img, img_label, gist_label, gamma
+
+    gamma_change(gray_pil_img, img_label, 1/gamma)
+    gist(gray_pil_img, gist_label)
+
+
+def quantization_click():
+    global gray_pil_img, img_label, gist_label, quantization
+
+    quantization_change(gray_pil_img, img_label, quantization)
+    gist(gray_pil_img, gist_label)
+
+
 def gray_scale(pil_img):
     copy_pil_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
     for i in range(pil_img.size[0]):
@@ -91,7 +123,7 @@ def gist(gray_pil_img, label):
         for j in range(gray_pil_img.size[1]):
             arr[gray_pil_img.getpixel((i, j))[0]] += 1
 
-    gist_pil_img = Image.new('RGB', (512, 400), 'white')
+    gist_pil_img = Image.new('RGB', (512, 600), 'white')
     gist_draw = ImageDraw.Draw(gist_pil_img)
     for k in range(256):
         gist_draw.rectangle([k * 2, gist_pil_img.size[1], (k * 2) + 1, gist_pil_img.size[1] - (int)(arr[k] / 30)],
@@ -162,6 +194,30 @@ def contrast_down(pil_img, label, q1, q2):
     label.image = img
 
 
+def gamma_change(pil_img, label, gamma):
+    for i in range(pil_img.size[0]):
+        for j in range(pil_img.size[1]):
+            pix = pil_img.getpixel((i, j))
+            res_pix = (int)(((pix[0] / 255) ** gamma) * 255)
+            pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
+    img = ImageTk.PhotoImage(pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
+def quantization_change(pil_img, label, quantization):
+    q_lenght = int(255 / (2 ** quantization))
+    for i in range(pil_img.size[0]):
+        for j in range(pil_img.size[1]):
+            pix = pil_img.getpixel((i, j))
+            res_pix = (int)(pix[0] / q_lenght)
+            res_pix *= q_lenght
+            pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
+    img = ImageTk.PhotoImage(pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
 window = Tk()
 window.title("Обработка изображений. Задание 1")
 window.geometry('1920x1080')
@@ -176,7 +232,6 @@ img_label.pack(side=LEFT)
 
 gist_label = Label(window)
 gist_label.pack(side=LEFT)
-
 gist(gray_pil_img, gist_label)
 
 reset_button = Button(text='reset img', command=reset_click)
@@ -202,5 +257,17 @@ contrast_up_button = Button(text='contrast up', command=conrast_up_click)
 contrast_up_button.pack()
 contrast_down_button = Button(text='contrast down', command=conrast_down_click)
 contrast_down_button.pack()
+
+scale_gamma = Scale(window,orient = 'horizontal', label = 'Gamma', from_=0, to=20, command=on_scale_gamma)
+scale_gamma.pack()
+gamma1_button = Button(text='Gamma', command=gamma1_click)
+gamma1_button.pack()
+gamma2_button = Button(text='1/Gamma', command=gamma2_click)
+gamma2_button.pack()
+
+scale_quantization = Scale(window, orient = 'horizontal', label = '2^', from_=0, to=7, command=on_scale_quantization)
+scale_quantization.pack()
+quantization_button = Button(text='quantization', command=quantization_click)
+quantization_button.pack()
 
 window.mainloop()
