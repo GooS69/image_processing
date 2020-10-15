@@ -7,6 +7,8 @@ contrast_q1 = 0
 contrast_q2 = 255
 gamma = 1
 quantization = 1
+filter_size = 1
+
 
 def on_scale_512(val):
     global scale_512
@@ -38,9 +40,13 @@ def on_scale_quantization(val):
     quantization = (int)(val)
 
 
+def on_scale_filter_size(val):
+    global filter_size
+    filter_size = (int)(val)
+
+
 def reset_click():
     global gray_pil_img, original_pil_img, img_label, gist_label
-
 
     gray_pil_img = gray_scale(original_pil_img)
     gray_img = ImageTk.PhotoImage(gray_pil_img)
@@ -95,7 +101,7 @@ def gamma1_click():
 def gamma2_click():
     global gray_pil_img, img_label, gist_label, gamma
 
-    gamma_change(gray_pil_img, img_label, 1/gamma)
+    gamma_change(gray_pil_img, img_label, 1 / gamma)
     gist(gray_pil_img, gist_label)
 
 
@@ -103,6 +109,27 @@ def quantization_click():
     global gray_pil_img, img_label, gist_label, quantization
 
     quantization_change(gray_pil_img, img_label, quantization)
+    gist(gray_pil_img, gist_label)
+
+
+def low_pass_filter_click():
+    global gray_pil_img, img_label, gist_label
+
+    low_pass_filter(gray_pil_img, img_label)
+    gist(gray_pil_img, gist_label)
+
+
+def high_pass_filter_click():
+    global gray_pil_img, img_label, gist_label
+
+    high_pass_filter(gray_pil_img, img_label)
+    gist(gray_pil_img, gist_label)
+
+
+def median_filter_click():
+    global gray_pil_img, img_label, gist_label, filter_size
+
+    median_filter(gray_pil_img, img_label, filter_size * 2 + 1)
     gist(gray_pil_img, gist_label)
 
 
@@ -133,7 +160,7 @@ def gist(gray_pil_img, label):
     label.image = gist_img
 
 
-def change_intensivity(pil_img, label,val):
+def change_intensivity(pil_img, label, val):
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
             pix = pil_img.getpixel((i, j))
@@ -176,7 +203,7 @@ def contrast_up(pil_img, label, q1, q2):
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
             pix = pil_img.getpixel((i, j))
-            res_pix = ((pix[0] - q1)*(255//(q2 - q1)))
+            res_pix = ((pix[0] - q1) * (255 // (q2 - q1)))
             pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
     img = ImageTk.PhotoImage(pil_img)
     label.configure(image=img)
@@ -218,8 +245,132 @@ def quantization_change(pil_img, label, quantization):
     label.image = img
 
 
+def low_pass_filter(pil_img, label):
+    global gray_pil_img
+    new_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
+
+    for i in range(1, pil_img.size[0] - 1):
+        for j in range(1, pil_img.size[1] - 1):
+            sum = 0
+            sum += pil_img.getpixel((i - 1, j - 1))[0]
+            sum += pil_img.getpixel((i, j - 1))[0]
+            sum += pil_img.getpixel((i + 1, j - 1))[0]
+            sum += pil_img.getpixel((i - 1, j))[0]
+            sum += pil_img.getpixel((i, j))[0]
+            sum += pil_img.getpixel((i + 1, j))[0]
+            sum += pil_img.getpixel((i - 1, j + 1))[0]
+            sum += pil_img.getpixel((i, j + 1))[0]
+            sum += pil_img.getpixel((i + 1, j - 1))[0]
+            sum /= 9
+            sum = (int)(sum)
+            new_img.putpixel((i, j), (sum, sum, sum))
+
+    for k in range(1, new_img.size[0] - 1):
+        pix = new_img.getpixel((k, 1))
+        new_img.putpixel((k, 0), (pix[0], pix[0], pix[0]))
+        pix = new_img.getpixel((k, new_img.size[1] - 2))
+        new_img.putpixel((k, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
+
+    for l in range(1, new_img.size[1] - 1):
+        pix = new_img.getpixel((1, l))
+        new_img.putpixel((0, l), (pix[0], pix[0], pix[0]))
+        pix = new_img.getpixel((new_img.size[0] - 2, l))
+        new_img.putpixel((new_img.size[0] - 1, l), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((1, 1))
+    new_img.putpixel((0, 0), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((new_img.size[0] - 2, 1))
+    new_img.putpixel((new_img.size[0] - 1, 0), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((1, new_img.size[1] - 2))
+    new_img.putpixel((0, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((new_img.size[0] - 2, new_img.size[1] - 2))
+    new_img.putpixel((new_img.size[0] - 1, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
+
+    gray_pil_img = new_img
+    img = ImageTk.PhotoImage(gray_pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
+def high_pass_filter(pil_img, label):
+    global gray_pil_img
+    new_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
+
+    for i in range(1, pil_img.size[0] - 1):
+        for j in range(1, pil_img.size[1] - 1):
+            sum = 0
+            sum += pil_img.getpixel((i - 1, j - 1))[0]
+            sum += pil_img.getpixel((i, j - 1))[0] * (-2)
+            sum += pil_img.getpixel((i + 1, j - 1))[0]
+            sum += pil_img.getpixel((i - 1, j))[0] * (-2)
+            sum += pil_img.getpixel((i, j))[0] * 5
+            sum += pil_img.getpixel((i + 1, j))[0] * (-2)
+            sum += pil_img.getpixel((i - 1, j + 1))[0]
+            sum += pil_img.getpixel((i, j + 1))[0] * (-2)
+            sum += pil_img.getpixel((i + 1, j - 1))[0]
+            sum = (int)(sum)
+            if (sum > 255):
+                new_img.putpixel((i, j), (255, 255, 255))
+            elif (sum < 0):
+                new_img.putpixel((i, j), (0, 0, 0))
+
+    for k in range(1, new_img.size[0] - 1):
+        pix = new_img.getpixel((k, 1))
+        new_img.putpixel((k, 0), (pix[0], pix[0], pix[0]))
+        pix = new_img.getpixel((k, new_img.size[1] - 2))
+        new_img.putpixel((k, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
+
+    for l in range(1, new_img.size[1] - 1):
+        pix = new_img.getpixel((1, l))
+        new_img.putpixel((0, l), (pix[0], pix[0], pix[0]))
+        pix = new_img.getpixel((new_img.size[0] - 2, l))
+        new_img.putpixel((new_img.size[0] - 1, l), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((1, 1))
+    new_img.putpixel((0, 0), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((new_img.size[0] - 2, 1))
+    new_img.putpixel((new_img.size[0] - 1, 0), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((1, new_img.size[1] - 2))
+    new_img.putpixel((0, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
+
+    pix = new_img.getpixel((new_img.size[0] - 2, new_img.size[1] - 2))
+    new_img.putpixel((new_img.size[0] - 1, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
+
+    gray_pil_img = new_img
+    img = ImageTk.PhotoImage(gray_pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
+def median_filter(pil_img, label, size):
+    global gray_pil_img
+    half_size = size // 2
+    new_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
+
+    for i in range(half_size, pil_img.size[0] - half_size - 1):
+        for j in range(half_size, pil_img.size[1] - half_size - 1):
+            arr = []
+            for k in range(-half_size, half_size + 1):
+                for m in range(-half_size, half_size + 1):
+                    arr.append(pil_img.getpixel((i + k, j + m))[0])
+            arr.sort()
+            pix = arr[(size ** 2) // 2 + 1]
+            new_img.putpixel((i, j), (pix, pix, pix))
+            print(i, j)
+
+    gray_pil_img = new_img
+    img = ImageTk.PhotoImage(gray_pil_img)
+    label.configure(image=img)
+    label.image = img
+
+
 window = Tk()
-window.title("Обработка изображений. Задание 1")
+window.title("Обработка изображений")
 window.geometry('1920x1080')
 
 original_pil_img = Image.open('img.jpg')
@@ -249,25 +400,37 @@ negative_button.pack()
 binarization_button = Button(text='binarization', command=binarization_click)
 binarization_button.pack()
 
-scale_q1 = Scale(window,orient = 'horizontal', label = 'q1', from_=0, to=255, command=on_scale_q1)
+scale_q1 = Scale(window, orient='horizontal', label='q1', from_=0, to=255, command=on_scale_q1)
 scale_q1.pack()
-scale_q2 = Scale(window,orient = 'horizontal', label = 'q2', from_=0, to=255, command=on_scale_q2)
+scale_q2 = Scale(window, orient='horizontal', label='q2', from_=0, to=255, command=on_scale_q2)
 scale_q2.pack()
 contrast_up_button = Button(text='contrast up', command=conrast_up_click)
 contrast_up_button.pack()
 contrast_down_button = Button(text='contrast down', command=conrast_down_click)
 contrast_down_button.pack()
 
-scale_gamma = Scale(window,orient = 'horizontal', label = 'Gamma', from_=0, to=20, command=on_scale_gamma)
+scale_gamma = Scale(window, orient='horizontal', label='Gamma', from_=0, to=20, command=on_scale_gamma)
 scale_gamma.pack()
 gamma1_button = Button(text='Gamma', command=gamma1_click)
 gamma1_button.pack()
 gamma2_button = Button(text='1/Gamma', command=gamma2_click)
 gamma2_button.pack()
 
-scale_quantization = Scale(window, orient = 'horizontal', label = '2^', from_=0, to=7, command=on_scale_quantization)
+scale_quantization = Scale(window, orient='horizontal', label='2^', from_=0, to=7, command=on_scale_quantization)
 scale_quantization.pack()
 quantization_button = Button(text='quantization', command=quantization_click)
 quantization_button.pack()
+
+low_pass_filter_button = Button(text='low pass filter', command=low_pass_filter_click)
+low_pass_filter_button.pack()
+
+high_pass_filter_button = Button(text='high pass filter', command=high_pass_filter_click)
+high_pass_filter_button.pack()
+
+scale_filter_size = Scale(window, orient='horizontal', label='size of filter', from_=1, to=10,
+                          command=on_scale_filter_size)
+scale_filter_size.pack()
+median_filter_button = Button(text='median filter', command=median_filter_click)
+median_filter_button.pack()
 
 window.mainloop()
