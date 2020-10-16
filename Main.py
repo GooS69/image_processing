@@ -134,10 +134,11 @@ def median_filter_click():
 
 
 def gray_scale(pil_img):
+    all_pix = pil_img.load()
     copy_pil_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             intensity = pix[0] * 0.3 + pix[1] * 0.59 + pix[2] * 0.11
             copy_pil_img.putpixel((i, j), (int(intensity), int(intensity), int(intensity)))
 
@@ -145,10 +146,11 @@ def gray_scale(pil_img):
 
 
 def gist(gray_pil_img, label):
+    all_pix = gray_pil_img.load()
     arr = [0] * 256
     for i in range(gray_pil_img.size[0]):
         for j in range(gray_pil_img.size[1]):
-            arr[gray_pil_img.getpixel((i, j))[0]] += 1
+            arr[all_pix[i, j][0]] += 1
 
     gist_pil_img = Image.new('RGB', (512, 600), 'white')
     gist_draw = ImageDraw.Draw(gist_pil_img)
@@ -161,9 +163,10 @@ def gist(gray_pil_img, label):
 
 
 def change_intensivity(pil_img, label, val):
+    all_pix = pil_img.load()
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             new_intensivity = pix[0] + val
             if (new_intensivity > 255):
                 new_intensivity = 255
@@ -176,9 +179,10 @@ def change_intensivity(pil_img, label, val):
 
 
 def negative(pil_img, label, val):
+    all_pix = pil_img.load()
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             if (pix[0] >= val):
                 pil_img.putpixel((i, j), (255 - pix[0], 255 - pix[0], 255 - pix[0]))
     img = ImageTk.PhotoImage(pil_img)
@@ -187,9 +191,10 @@ def negative(pil_img, label, val):
 
 
 def binarization(pil_img, label, val):
+    all_pix = pil_img.load()
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             if (pix[0] >= val):
                 pil_img.putpixel((i, j), (255, 255, 255))
             else:
@@ -200,9 +205,10 @@ def binarization(pil_img, label, val):
 
 
 def contrast_up(pil_img, label, q1, q2):
+    all_pix = pil_img.load()
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             res_pix = ((pix[0] - q1) * (255 // (q2 - q1)))
             pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
     img = ImageTk.PhotoImage(pil_img)
@@ -211,9 +217,10 @@ def contrast_up(pil_img, label, q1, q2):
 
 
 def contrast_down(pil_img, label, q1, q2):
+    all_pix = pil_img.load()
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             res_pix = q1 + pix[0] * ((q2 - q1) // 255)
             pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
     img = ImageTk.PhotoImage(pil_img)
@@ -222,9 +229,10 @@ def contrast_down(pil_img, label, q1, q2):
 
 
 def gamma_change(pil_img, label, gamma):
+    all_pix = pil_img.load()
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             res_pix = (int)(((pix[0] / 255) ** gamma) * 255)
             pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
     img = ImageTk.PhotoImage(pil_img)
@@ -233,10 +241,11 @@ def gamma_change(pil_img, label, gamma):
 
 
 def quantization_change(pil_img, label, quantization):
+    all_pix = pil_img.load()
     q_lenght = int(255 / (2 ** quantization))
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
-            pix = pil_img.getpixel((i, j))
+            pix = all_pix[i, j]
             res_pix = (int)(pix[0] / q_lenght)
             res_pix *= q_lenght
             pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
@@ -247,46 +256,47 @@ def quantization_change(pil_img, label, quantization):
 
 def low_pass_filter(pil_img, label):
     global gray_pil_img
+    all_pix = pil_img.load()
     new_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
 
     for i in range(1, pil_img.size[0] - 1):
         for j in range(1, pil_img.size[1] - 1):
             sum = 0
-            sum += pil_img.getpixel((i - 1, j - 1))[0]
-            sum += pil_img.getpixel((i, j - 1))[0]
-            sum += pil_img.getpixel((i + 1, j - 1))[0]
-            sum += pil_img.getpixel((i - 1, j))[0]
-            sum += pil_img.getpixel((i, j))[0]
-            sum += pil_img.getpixel((i + 1, j))[0]
-            sum += pil_img.getpixel((i - 1, j + 1))[0]
-            sum += pil_img.getpixel((i, j + 1))[0]
-            sum += pil_img.getpixel((i + 1, j - 1))[0]
+            sum += all_pix[i - 1, j - 1][0]
+            sum += all_pix[i, j - 1][0]
+            sum += all_pix[i + 1, j - 1][0]
+            sum += all_pix[i - 1, j][0]
+            sum += all_pix[i, j][0]
+            sum += all_pix[i + 1, j][0]
+            sum += all_pix[i - 1, j + 1][0]
+            sum += all_pix[i, j + 1][0]
+            sum += all_pix[i + 1, j - 1][0]
             sum /= 9
             sum = (int)(sum)
             new_img.putpixel((i, j), (sum, sum, sum))
 
-    for k in range(1, new_img.size[0] - 1):
-        pix = new_img.getpixel((k, 1))
+    for k in range(pil_img.size[0]):
+        pix = all_pix[k, 0]
         new_img.putpixel((k, 0), (pix[0], pix[0], pix[0]))
-        pix = new_img.getpixel((k, new_img.size[1] - 2))
+        pix = all_pix[k, new_img.size[1] - 1]
         new_img.putpixel((k, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
 
     for l in range(1, new_img.size[1] - 1):
-        pix = new_img.getpixel((1, l))
+        pix = all_pix[0, l]
         new_img.putpixel((0, l), (pix[0], pix[0], pix[0]))
-        pix = new_img.getpixel((new_img.size[0] - 2, l))
+        pix = all_pix[new_img.size[0] - 1, l]
         new_img.putpixel((new_img.size[0] - 1, l), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((1, 1))
+    pix = all_pix[0, 0]
     new_img.putpixel((0, 0), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((new_img.size[0] - 2, 1))
+    pix = all_pix[new_img.size[0] - 1, 0]
     new_img.putpixel((new_img.size[0] - 1, 0), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((1, new_img.size[1] - 2))
+    pix = all_pix[0, new_img.size[1] - 1]
     new_img.putpixel((0, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((new_img.size[0] - 2, new_img.size[1] - 2))
+    pix = all_pix[new_img.size[0] - 1, new_img.size[1] - 1]
     new_img.putpixel((new_img.size[0] - 1, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
 
     gray_pil_img = new_img
@@ -297,48 +307,49 @@ def low_pass_filter(pil_img, label):
 
 def high_pass_filter(pil_img, label):
     global gray_pil_img
+    all_pix = pil_img.load()
     new_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
 
     for i in range(1, pil_img.size[0] - 1):
         for j in range(1, pil_img.size[1] - 1):
             sum = 0
-            sum += pil_img.getpixel((i - 1, j - 1))[0]
-            sum += pil_img.getpixel((i, j - 1))[0] * (-2)
-            sum += pil_img.getpixel((i + 1, j - 1))[0]
-            sum += pil_img.getpixel((i - 1, j))[0] * (-2)
-            sum += pil_img.getpixel((i, j))[0] * 5
-            sum += pil_img.getpixel((i + 1, j))[0] * (-2)
-            sum += pil_img.getpixel((i - 1, j + 1))[0]
-            sum += pil_img.getpixel((i, j + 1))[0] * (-2)
-            sum += pil_img.getpixel((i + 1, j - 1))[0]
+            sum += all_pix[i - 1, j - 1][0]
+            sum += all_pix[i, j - 1][0] * (-2)
+            sum += all_pix[i + 1, j - 1][0]
+            sum += all_pix[i - 1, j][0] * (-2)
+            sum += all_pix[i, j][0] * 5
+            sum += all_pix[i + 1, j][0] * (-2)
+            sum += all_pix[i - 1, j + 1][0]
+            sum += all_pix[i, j + 1][0] * (-2)
+            sum += all_pix[i + 1, j - 1][0]
             sum = (int)(sum)
             if (sum > 255):
                 new_img.putpixel((i, j), (255, 255, 255))
             elif (sum < 0):
                 new_img.putpixel((i, j), (0, 0, 0))
 
-    for k in range(1, new_img.size[0] - 1):
-        pix = new_img.getpixel((k, 1))
+    for k in range(pil_img.size[0]):
+        pix = all_pix[k, 0]
         new_img.putpixel((k, 0), (pix[0], pix[0], pix[0]))
-        pix = new_img.getpixel((k, new_img.size[1] - 2))
+        pix = all_pix[k, new_img.size[1] - 1]
         new_img.putpixel((k, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
 
     for l in range(1, new_img.size[1] - 1):
-        pix = new_img.getpixel((1, l))
+        pix = all_pix[0, l]
         new_img.putpixel((0, l), (pix[0], pix[0], pix[0]))
-        pix = new_img.getpixel((new_img.size[0] - 2, l))
+        pix = all_pix[new_img.size[0] - 1, l]
         new_img.putpixel((new_img.size[0] - 1, l), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((1, 1))
+    pix = all_pix[0, 0]
     new_img.putpixel((0, 0), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((new_img.size[0] - 2, 1))
+    pix = all_pix[new_img.size[0] - 1, 0]
     new_img.putpixel((new_img.size[0] - 1, 0), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((1, new_img.size[1] - 2))
+    pix = all_pix[0, new_img.size[1] - 1]
     new_img.putpixel((0, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
 
-    pix = new_img.getpixel((new_img.size[0] - 2, new_img.size[1] - 2))
+    pix = all_pix[new_img.size[0] - 1, new_img.size[1] - 1]
     new_img.putpixel((new_img.size[0] - 1, new_img.size[1] - 1), (pix[0], pix[0], pix[0]))
 
     gray_pil_img = new_img
@@ -349,6 +360,9 @@ def high_pass_filter(pil_img, label):
 
 def median_filter(pil_img, label, size):
     global gray_pil_img
+
+    all_pix = pil_img.load()
+
     half_size = size // 2
     new_img = Image.new('RGB', (pil_img.size[0], pil_img.size[1]))
 
@@ -357,11 +371,24 @@ def median_filter(pil_img, label, size):
             arr = []
             for k in range(-half_size, half_size + 1):
                 for m in range(-half_size, half_size + 1):
-                    arr.append(pil_img.getpixel((i + k, j + m))[0])
+                    arr.append(all_pix[i + k, j + m][0])
             arr.sort()
             pix = arr[(size ** 2) // 2 + 1]
             new_img.putpixel((i, j), (pix, pix, pix))
-            print(i, j)
+
+    for k in range(pil_img.size[0]):
+        for m in range(half_size + 1):
+            pix = all_pix[k, m]
+            new_img.putpixel((k, m), (pix[0], pix[0], pix[0]))
+            pix = all_pix[k, new_img.size[1] - 1 - m]
+            new_img.putpixel((k, new_img.size[1] - 1 - m), (pix[0], pix[0], pix[0]))
+
+    for l in range(new_img.size[1]):
+        for n in range(half_size + 1):
+            pix = all_pix[n, l]
+            new_img.putpixel((n, l), (pix[0], pix[0], pix[0]))
+            pix = all_pix[new_img.size[0] - 1 - n, l]
+            new_img.putpixel((new_img.size[0] - 1 - n, l), (pix[0], pix[0], pix[0]))
 
     gray_pil_img = new_img
     img = ImageTk.PhotoImage(gray_pil_img)
