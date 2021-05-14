@@ -235,7 +235,7 @@ def contrast_down(pil_img, label, q1, q2):
     for i in range(pil_img.size[0]):
         for j in range(pil_img.size[1]):
             pix = all_pix[i, j]
-            res_pix = q1 + pix[0] * ((q2 - q1) // 255)
+            res_pix = (int)(q1 + pix[0] * ((q2 - q1) / 255))
             pil_img.putpixel((i, j), (res_pix, res_pix, res_pix))
     img = ImageTk.PhotoImage(pil_img)
     label.configure(image=img)
@@ -338,20 +338,22 @@ def high_pass_filter(pil_img, label):
     for i in range(1, pil_img.size[0] - 1):
         for j in range(1, pil_img.size[1] - 1):
             sum = 0
-            sum += all_pix[i - 1, j - 1][0]
-            sum += all_pix[i, j - 1][0] * (-2)
-            sum += all_pix[i + 1, j - 1][0]
-            sum += all_pix[i - 1, j][0] * (-2)
-            sum += all_pix[i, j][0] * 5
-            sum += all_pix[i + 1, j][0] * (-2)
-            sum += all_pix[i - 1, j + 1][0]
-            sum += all_pix[i, j + 1][0] * (-2)
-            sum += all_pix[i + 1, j - 1][0]
+            sum += all_pix[i - 1, j - 1][0] * (-1)
+            sum += all_pix[i, j - 1][0] * (-1)
+            sum += all_pix[i + 1, j - 1][0] * (-1)
+            sum += all_pix[i - 1, j][0] * (-1)
+            sum += all_pix[i, j][0] * 9
+            sum += all_pix[i + 1, j][0] * (-1)
+            sum += all_pix[i - 1, j + 1][0] * (-1)
+            sum += all_pix[i, j + 1][0] * (-1)
+            sum += all_pix[i + 1, j - 1][0] * (-1)
             sum = (int)(sum)
             if (sum > 255):
                 new_img.putpixel((i, j), (255, 255, 255))
             elif (sum < 0):
                 new_img.putpixel((i, j), (0, 0, 0))
+            else:
+                new_img.putpixel((i, j), (sum, sum, sum))
 
     for k in range(pil_img.size[0]):
         pix = all_pix[k, 0]
