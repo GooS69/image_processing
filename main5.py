@@ -59,7 +59,7 @@ def find_digit():
     #print(digit)
 
 
-original_pil_img = Image.open('img5.jpg')
+original_pil_img = Image.open('test.jpg')
 reference_pil_img = Image.open('reference.jpg')
 get_reference()
 find_digit()
