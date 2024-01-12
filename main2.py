@@ -78,7 +78,7 @@ def gist(gray_pil_img, label):
     gist_pil_img = Image.new('RGB', (512, 600), 'white')
     gist_draw = ImageDraw.Draw(gist_pil_img)
     for k in range(256):
-        gist_draw.rectangle([k * 2, gist_pil_img.size[1], (k * 2) + 1, gist_pil_img.size[1] - (int)(arr[k] / 30)],
+        gist_draw.rectangle([k * 2, gist_pil_img.size[1] - (int)(arr[k] / 30), (k * 2) + 1, gist_pil_img.size[1]],
                             fill='black')
     gist_img = ImageTk.PhotoImage(gist_pil_img)
     label.configure(image=gist_img)
